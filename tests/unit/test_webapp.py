@@ -183,6 +183,100 @@ class ViewsTestCase(SearxTestCase):  # pylint: disable=too-many-public-methods
         self.assertEqual(result.status_code, 200)
         self.assertIn(b'OK', result.data)
 
+    def test_mcp_initialize(self):
+        result = self.client.post(
+            '/mcp',
+            json={
+                'jsonrpc': '2.0',
+                'id': 1,
+                'method': 'initialize',
+                'params': {'protocolVersion': '2025-06-18'},
+            },
+            headers={'Accept': 'application/json, text/event-stream'},
+        )
+        result_dict = result.get_json()
+
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(result.content_type, 'application/json')
+        self.assertEqual(result_dict['id'], 1)
+        self.assertEqual(result_dict['result']['protocolVersion'], '2025-06-18')
+        self.assertEqual(result_dict['result']['serverInfo']['name'], 'searxng-mcp')
+
+    def test_mcp_allows_loopback_cors_preflight(self):
+        result = self.client.open(
+            '/mcp',
+            method='OPTIONS',
+            headers={
+                'Origin': 'http://localhost:6274',
+                'Host': 'localhost:8888',
+                'Access-Control-Request-Method': 'POST',
+                'Access-Control-Request-Headers': 'content-type,mcp-protocol-version',
+            },
+        )
+
+        self.assertEqual(result.status_code, 204)
+        self.assertEqual(result.headers['Access-Control-Allow-Origin'], 'http://localhost:6274')
+        self.assertIn('POST', result.headers['Access-Control-Allow-Methods'])
+        self.assertIn('MCP-Protocol-Version', result.headers['Access-Control-Allow-Headers'])
+
+    def test_mcp_allows_loopback_cors_post(self):
+        result = self.client.post(
+            '/mcp',
+            json={'jsonrpc': '2.0', 'id': 1, 'method': 'ping'},
+            headers={
+                'Origin': 'http://localhost:6274',
+                'Host': 'localhost:8888',
+                'Accept': 'application/json, text/event-stream',
+            },
+        )
+
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(result.headers['Access-Control-Allow-Origin'], 'http://localhost:6274')
+
+    def test_mcp_tools_call(self):
+        result = self.client.post(
+            '/mcp',
+            json={
+                'jsonrpc': '2.0',
+                'id': 2,
+                'method': 'tools/call',
+                'params': {
+                    'name': 'searxng_search',
+                    'arguments': {'query': 'test', 'count': 1},
+                },
+            },
+            headers={'Accept': 'application/json, text/event-stream'},
+        )
+        result_dict = result.get_json()
+
+        self.assertEqual(result.status_code, 200)
+        self.assertEqual(len(result_dict['result']['structuredContent']['results']), 1)
+        self.assertEqual(result_dict['result']['structuredContent']['results'][0]['title'], 'First Test')
+        self.assertIn('First Test', result_dict['result']['content'][0]['text'])
+        self.assertNotIn('Second Test', result_dict['result']['content'][0]['text'])
+
+    def test_mcp_notification_returns_accepted(self):
+        result = self.client.post(
+            '/mcp',
+            json={'jsonrpc': '2.0', 'method': 'notifications/initialized'},
+            headers={'Accept': 'application/json, text/event-stream'},
+        )
+
+        self.assertEqual(result.status_code, 202)
+        self.assertEqual(result.data, b'')
+
+    def test_mcp_rejects_cross_origin_request(self):
+        result = self.client.post(
+            '/mcp',
+            json={'jsonrpc': '2.0', 'id': 1, 'method': 'ping'},
+            headers={
+                'Origin': 'https://evil.example',
+                'Accept': 'application/json, text/event-stream',
+            },
+        )
+
+        self.assertEqual(result.status_code, 403)
+
     def test_preferences(self):
         result = self.client.get('/preferences')
         self.assertEqual(result.status_code, 200)

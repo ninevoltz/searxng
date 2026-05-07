@@ -7,6 +7,7 @@ import json
 import os
 import sys
 import base64
+import ipaddress
 
 from timeit import default_timer
 from html import escape
@@ -19,6 +20,7 @@ from urllib.parse import urlencode, urlparse, unquote
 
 import warnings
 import httpx
+from werkzeug.exceptions import BadRequest
 
 from pygments import highlight
 from pygments.lexers import get_lexer_by_name
@@ -71,6 +73,7 @@ from searx.engines import (
 )
 
 from searx import webutils
+from searx import mcp as searx_mcp
 from searx.webutils import (
     highlight_content,
     get_result_templates,
@@ -600,6 +603,91 @@ def index():
 @app.route('/healthz', methods=['GET'])
 def health():
     return Response('OK', mimetype='text/plain')
+
+
+def _mcp_origin_allowed() -> bool:
+    origin = sxng_request.headers.get('Origin')
+    if not origin:
+        return True
+    origin_url = urlparse(origin)
+    if origin_url.scheme not in ('http', 'https') or not origin_url.hostname:
+        return False
+    if origin_url.netloc == sxng_request.host:
+        return True
+    host_url = urlparse('//' + sxng_request.host)
+    return _mcp_is_loopback_host(origin_url.hostname) and _mcp_is_loopback_host(
+        host_url.hostname
+    )
+
+
+def _mcp_is_loopback_host(hostname: str | None) -> bool:
+    if not hostname:
+        return False
+    if hostname.lower() == 'localhost':
+        return True
+    try:
+        return ipaddress.ip_address(hostname).is_loopback
+    except ValueError:
+        return False
+
+
+def _mcp_add_cors_headers(response: Response) -> Response:
+    if not _mcp_origin_allowed():
+        return response
+
+    origin = sxng_request.headers.get('Origin')
+    if not origin:
+        return response
+
+    response.headers['Access-Control-Allow-Origin'] = origin
+    response.headers['Access-Control-Allow-Methods'] = 'POST, OPTIONS'
+    response.headers['Access-Control-Allow-Headers'] = (
+        'Accept, Content-Type, Last-Event-ID, MCP-Protocol-Version, '
+        'Mcp-Method, Mcp-Name, Mcp-Session-Id'
+    )
+    response.headers['Access-Control-Expose-Headers'] = (
+        'MCP-Protocol-Version, Mcp-Session-Id'
+    )
+    response.headers.add('Vary', 'Origin')
+    return response
+
+
+@app.route('/mcp', methods=['GET', 'POST', 'DELETE', 'OPTIONS'])
+def mcp():
+    """MCP Streamable HTTP endpoint."""
+    if sxng_request.method == 'OPTIONS':
+        if not _mcp_origin_allowed():
+            flask.abort(403)
+        return _mcp_add_cors_headers(Response('', status=204))
+
+    if sxng_request.method in ('GET', 'DELETE'):
+        return _mcp_add_cors_headers(
+            Response('', status=405, headers={'Allow': 'POST'})
+        )
+
+    if not _mcp_origin_allowed():
+        flask.abort(403)
+
+    try:
+        payload = sxng_request.get_json(force=False, silent=False)
+    except BadRequest as exc:
+        error = searx_mcp.json_error(
+            None, searx_mcp.JsonRpcError(-32700, "Parse error", str(exc))
+        )
+        return _mcp_add_cors_headers(
+            Response(
+                searx_mcp.dumps_message(error),
+                status=400,
+                mimetype='application/json',
+            )
+        )
+
+    response = searx_mcp.handle_message(payload, sxng_request)
+    if response is None:
+        return _mcp_add_cors_headers(Response('', status=202))
+    return _mcp_add_cors_headers(
+        Response(searx_mcp.dumps_message(response), mimetype='application/json')
+    )
 
 
 @app.route('/client<token>.css', methods=['GET', 'POST'])

@@ -50,6 +50,27 @@ env = { SEARXNG_URL = "http://127.0.0.1:8080" }
 When Codex is using local Ollama models, keep your Ollama model configuration
 unchanged and add the MCP server entry alongside it.
 
+## HTTP Endpoint
+
+SearXNG also exposes the MCP server through the web app's Streamable HTTP
+transport:
+
+```text
+http://127.0.0.1:8080/mcp
+```
+
+Point agents that support remote MCP servers at the `/mcp` URL for the SearXNG
+instance. The endpoint accepts JSON-RPC MCP requests over HTTP `POST` and uses
+the same in-process search path as the regular `/search` route.
+
+For non-local access, put SearXNG behind HTTPS and authentication. The endpoint
+rejects browser requests with a cross-host `Origin` header, but it does not add
+new user authentication on its own.
+
+Browser-based local clients, such as MCP inspectors running on another localhost
+port, are supported with CORS preflight responses when both the client origin
+and SearXNG host are loopback addresses.
+
 ## Tool
 
 The server exposes one tool:
