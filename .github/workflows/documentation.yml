@@ -37,7 +37,7 @@ jobs:
           python-version: "${{ env.PYTHON_VERSION }}"
 
       - name: Checkout
-        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd  # v6.0.2
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
           persist-credentials: "false"
           fetch-depth: "0"
@@ -50,11 +50,14 @@ jobs:
             python-${{ env.PYTHON_VERSION }}-${{ runner.arch }}-
           path: "./local/"
 
+      - name: Setup dependencies
+        run: sudo ./utils/searxng.sh install buildhost
+
       - name: Setup venv
         run: make V=1 install
 
       - name: Build documentation
-        run: make V=1 docs.clean docs.html
+        run: make V=1 docs.html
 
       - if: github.ref_name == 'master'
         name: Release
