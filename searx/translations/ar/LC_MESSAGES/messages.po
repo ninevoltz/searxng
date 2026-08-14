@@ -28,13 +28,14 @@
 # DZDevelopers <dzdevelopers@noreply.codeberg.org>, 2025.
 # youtherthyf <youtherthyf@noreply.codeberg.org>, 2025.
 # mustafa-phd <mustafa-phd@noreply.codeberg.org>, 2026.
+# nebras <nebras@noreply.codeberg.org>, 2026.
 msgid ""
 msgstr ""
 "Project-Id-Version:  searx\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2026-06-13 11:31+0000\n"
-"PO-Revision-Date: 2026-05-27 12:07+0000\n"
-"Last-Translator: mustafa-phd <mustafa-phd@noreply.codeberg.org>\n"
+"POT-Creation-Date: 2026-07-15 15:45+0000\n"
+"PO-Revision-Date: 2026-06-28 18:07+0000\n"
+"Last-Translator: nebras <nebras@noreply.codeberg.org>\n"
 "Language: ar\n"
 "Language-Team: Arabic "
 "<https://translate.codeberg.org/projects/searxng/searxng/ar/>\n"
@@ -86,7 +87,7 @@ msgid "videos"
 msgstr "ڤيديوهات"
 
 #. CATEGORY_NAMES['RADIO']
-#: searx/engines/radio_browser.py:159 searx/searxng.msg
+#: searx/engines/radio_browser.py:160 searx/searxng.msg
 msgid "radio"
 msgstr "إذاعة"
 
@@ -560,7 +561,7 @@ msgstr "تمت الإجابة"
 msgid "No item found"
 msgstr "لم يتم العثور على عنصر"
 
-#: searx/engines/qwant.py:258
+#: searx/engines/qwant.py:286
 #: searx/templates/simple/result_templates/images.html:62 searx/webapp.py:328
 msgid "Source"
 msgstr "مصدر"
@@ -656,7 +657,7 @@ msgstr "توليد قِيم عشوائية مختلفة"
 msgid "Compute {func} of the arguments"
 msgstr "حساب {func} من الحجج"
 
-#: searx/engines/boardreader.py:107
+#: searx/engines/boardreader.py:108
 #, python-brace-format
 msgid "Posted by {author}"
 msgstr "منشور بواسطة {author}"
@@ -674,19 +675,19 @@ msgstr "{title} (قديم)"
 msgid "This entry has been superseded by"
 msgstr "تم استبدال هذا الإدخال بـ"
 
-#: searx/engines/qwant.py:260
+#: searx/engines/qwant.py:288
 msgid "Channel"
 msgstr "القناة"
 
-#: searx/engines/radio_browser.py:161
+#: searx/engines/radio_browser.py:162
 msgid "bitrate"
 msgstr "معدل البت"
 
-#: searx/engines/radio_browser.py:162
+#: searx/engines/radio_browser.py:163
 msgid "votes"
 msgstr "تصويتات"
 
-#: searx/engines/radio_browser.py:163
+#: searx/engines/radio_browser.py:164
 msgid "clicks"
 msgstr "نقرات"
 
@@ -720,15 +721,15 @@ msgstr ""
 msgid "The image could not be downloaded."
 msgstr "لا يمكن تنزيل الصورة."
 
-#: searx/engines/zlibrary.py:79
+#: searx/engines/zlibrary.py:80
 msgid "Language"
 msgstr "اللغة"
 
-#: searx/engines/zlibrary.py:80
+#: searx/engines/zlibrary.py:81
 msgid "Book rating"
 msgstr "تقييم الكتاب"
 
-#: searx/engines/zlibrary.py:81
+#: searx/engines/zlibrary.py:82
 msgid "File quality"
 msgstr "جودة الملف"
 
@@ -1020,6 +1021,7 @@ msgid "Privacy"
 msgstr "الخصوصية"
 
 #: searx/templates/simple/preferences.html:235
+#: searx/templates/simple/result_templates/images.html:63
 msgid "Engines"
 msgstr "المحركات"
 
@@ -1653,15 +1655,11 @@ msgstr "الدقة"
 
 #: searx/templates/simple/result_templates/images.html:55
 msgid "Image formats"
-msgstr ""
+msgstr "صيغ الصور"
 
 #: searx/templates/simple/result_templates/images.html:56
 msgid "original format"
-msgstr ""
-
-#: searx/templates/simple/result_templates/images.html:63
-msgid "Engine"
-msgstr "محرك"
+msgstr "الصيغة الاصلية"
 
 #: searx/templates/simple/result_templates/images.html:64
 msgid "View source"
@@ -2402,4 +2400,7 @@ msgstr "إخفاء الفيديو"
 
 #~ msgid "Format"
 #~ msgstr "صيغة"
+
+#~ msgid "Engine"
+#~ msgstr "محرك"
 

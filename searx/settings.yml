@@ -42,12 +42,12 @@ search:
   safe_search: 0
   # Existing autocomplete backends: "360search", "baidu", "bing", "brave", "dbpedia", "duckduckgo", "google",
   # "yandex", "privacywall", "mwmbl", "naver", "seznam", "sogou", "startpage", "swisscows", "quark", "qwant",
-  # "wikipedia" - leave blank to turn it off by default.
-  autocomplete: ""
+  # "wikipedia" - set blank to turn it off by default.
+  autocomplete: "duckduckgo"
   # minimun characters to type before autocompleter starts
   autocomplete_min: 4
   # backend for the favicon near URL in search results.
-  # Available resolvers: "allesedv", "duckduckgo", "google", "yandex" - leave blank to turn it off by default.
+  # Available resolvers: "allesedv", "duckduckgo", "google", "kagi", "yandex" - leave blank to turn it off by default.
   favicon_resolver: ""
   # Default search language - leave blank to detect from browser information or
   # use codes from 'languages.py'
@@ -107,11 +107,10 @@ server:
   image_proxy: false
   # 1.0 and 1.1 are supported
   http_protocol_version: "1.0"
-  # POST queries are "more secure!" but are also the source of hard-to-locate
-  # annoyances, which is why GET may be better for end users and their browsers.
+  # POST keeps search queries out of the browsers history, but causes UX issues.
   # see https://github.com/searxng/searxng/pull/3619
   # Is overwritten by ${SEARXNG_METHOD}
-  method: "POST"
+  method: "GET"
   default_http_headers:
     X-Content-Type-Options: nosniff
     X-Download-Options: noopen
@@ -443,6 +442,12 @@ engines:
     timeout: 6.0
     shortcut: conda
     disabled: true
+    about:
+      website: https://anaconda.org/search
+      wikidata_id: Q18209310
+      official_api_documentation: https://api.anaconda.org/search
+      use_official_api: false
+      results: HTML
 
   - name: arch linux wiki
     engine: archlinux
@@ -470,6 +475,24 @@ engines:
   - name: arxiv
     engine: arxiv
     shortcut: arx
+
+  - name: avalw
+    engine: json_engine
+    shortcut: av
+    categories: general
+    paging: true
+    search_url: https://avalw.org/api/search?q={query}&page={pageno}&limit=10&tbm=all
+    results_query: results
+    url_query: url
+    title_query: title
+    content_query: snippet
+    thumbnail: image_url
+    disabled: true
+    inactive: true
+    about:
+      website: https://avalw.com
+      description: "Search engine from the Romanian news company AVALW S.R.L."
+      results: JSON
 
   - name: ayo
     engine: xpath
@@ -644,26 +667,7 @@ engines:
     engine: chinaso
     shortcut: chinaso
     categories: [news]
-    chinaso_category: news
     chinaso_news_source: all
-    disabled: true
-    inactive: true
-
-  - name: chinaso images
-    engine: chinaso
-    network: chinaso news
-    shortcut: chinasoi
-    categories: [images]
-    chinaso_category: images
-    disabled: true
-    inactive: true
-
-  - name: chinaso videos
-    engine: chinaso
-    network: chinaso news
-    shortcut: chinasov
-    categories: [videos]
-    chinaso_category: videos
     disabled: true
     inactive: true
 
@@ -848,28 +852,28 @@ engines:
     shortcut: dog
     dogpile_categ: search
     categories: general
-    disabled: true
+    inactive: true
 
   - name: dogpile images
     engine: dogpile
     shortcut: dogi
     dogpile_categ: images
     categories: images
-    disabled: true
+    inactive: true
 
   - name: dogpile videos
     engine: dogpile
     shortcut: dogv
     dogpile_categ: videos
     categories: videos
-    disabled: true
+    inactive: true
 
   - name: dogpile news
     engine: dogpile
     shortcut: dogn
     dogpile_categ: news
     categories: news
-    disabled: true
+    inactive: true
 
   # duckduckgo uses html.duckduckgo.com,
   # duckduckgo web uses duckduckgo.com
@@ -1212,10 +1216,12 @@ engines:
   - name: google
     engine: google
     shortcut: go
+    inactive: true
 
   - name: google images
     engine: google_images
     shortcut: goi
+    inactive: true
 
   - name: google news
     engine: google_news
@@ -1224,6 +1230,17 @@ engines:
   - name: google videos
     engine: google_videos
     shortcut: gov
+    inactive: true
+
+  - name: google cse
+    engine: google_cse
+    shortcut: goc
+
+  - name: google cse images
+    engine: google_cse
+    categories: [images, web]
+    google_categ: image
+    shortcut: goci
 
   - name: google scholar
     engine: google_scholar
@@ -1393,6 +1410,12 @@ engines:
     shortcut: iq
     disabled: true
 
+  - name: jina
+    engine: jina
+    shortcut: ji
+    api_key: ""
+    inactive: true
+
   # - name: kagi
   #   engine: kagi
   #   categories: [general, web]
@@ -1421,6 +1444,33 @@ engines:
   #   shortcut: kgv
   #   api_key: ""  # required
   #   kagi_categ: videos
+
+  - name: kavunka demo
+    engine: xpath
+    categories: general
+    paging: true
+    shortcut: kav
+    search_url: https://kavunka.net/search/kavunka-srv.php
+    method: POST
+    request_body: request={query}&np={pageno}
+    headers:
+      Content-Type: application/x-www-form-urlencoded
+    disabled: true
+    inactive: true
+    results_xpath: //div[contains(@class, "issue")]
+    url_xpath: .//h2/a/@href
+    title_xpath: .//h2
+    content_xpath: .//div[contains(@class, "snip")]
+    about:
+      website: https://kavunka.net
+      description: "Demo index of Kavunka, a statistical search engine"
+      results: HTML
+
+  - name: keenable
+    engine: keenable
+    shortcut: keen
+    disabled: true
+    inactive: true
 
   - name: kozmonavt
     engine: xpath
@@ -1598,6 +1648,11 @@ engines:
     disabled: true
     inactive: true
 
+  - name: magnific
+    engine: magnific
+    shortcut: mag
+    disabled: true
+
   - name: marginalia
     engine: marginalia
     shortcut: mar
@@ -1698,6 +1753,12 @@ engines:
     # api_url: https://api.mwmbl.org
     shortcut: mwm
     disabled: true
+
+  - name: neocities
+    engine: neocities
+    shortcut: nc
+    disabled: true
+    inactive: true
 
   - name: niconico
     engine: niconico
@@ -1870,6 +1931,11 @@ engines:
     engine: photon
     shortcut: ph
 
+  - name: picjumbo
+    engine: picjumbo
+    shortcut: pj
+    disabled: true
+
   - name: pinterest
     engine: pinterest
     shortcut: pin
@@ -1959,41 +2025,6 @@ engines:
   - name: podchaser
     engine: podchaser
     shortcut: poc
-    disabled: true
-
-  - name: presearch
-    engine: presearch
-    search_type: search
-    categories: [general, web]
-    shortcut: ps
-    timeout: 4.0
-    disabled: true
-
-  - name: presearch images
-    engine: presearch
-    network: presearch
-    search_type: images
-    categories: [images, web]
-    timeout: 4.0
-    shortcut: psimg
-    disabled: true
-
-  - name: presearch videos
-    engine: presearch
-    network: presearch
-    search_type: videos
-    categories: [general, web]
-    timeout: 4.0
-    shortcut: psvid
-    disabled: true
-
-  - name: presearch news
-    engine: presearch
-    network: presearch
-    search_type: news
-    categories: [news, web]
-    timeout: 4.0
-    shortcut: psnews
     disabled: true
 
   - name: pub.dev
@@ -2121,12 +2152,6 @@ engines:
       require_api_key: false
       results: JSON
 
-  - name: reddit
-    engine: reddit
-    shortcut: re
-    page_size: 25
-    disabled: true
-
   - name: reuters
     engine: reuters
     shortcut: reu
@@ -2178,6 +2203,11 @@ engines:
     engine: sepiasearch
     shortcut: sep
 
+  - name: shopify stock
+    engine: shopify_stock
+    shortcut: shs
+    disabled: true
+
   - name: sogou
     engine: sogou
     shortcut: sogou
@@ -2207,6 +2237,11 @@ engines:
     shortcut: st
     api_site: 'stackoverflow'
     categories: [it, q&a]
+
+  - name: stocksnap
+    engine: stocksnap
+    shortcut: sto
+    disabled: true
 
   - name: askubuntu
     engine: stackexchange
@@ -2549,6 +2584,16 @@ engines:
     shortcut: ydi
     disabled: true
 
+  - name: yandex api
+    engine: yandex_api
+    categories: [general, web]
+    shortcut: yda
+    inactive: true
+    # api_key: ""
+    # folder_id: ""
+    # search_type: SEARCH_TYPE_COM
+    # l10n: LOCALIZATION_EN
+
   - name: yandex music
     engine: yandex_music
     network: yandex
@@ -2847,6 +2892,12 @@ engines:
     shortcut: nvrv
     disabled: true
 
+  - name: neosearch
+    engine: neosearch
+    shortcut: neo
+    disabled: true
+    inactive: true
+
   - name: rubygems
     shortcut: rbg
     engine: xpath
@@ -2976,44 +3027,17 @@ engines:
       results: HTML
 
   - name: searchzee
-    engine: json_engine
-    search_url: https://searchzee.com/api/search?q={query}&type=web&offset={pageno}
-    paging: true
-    first_page_num: 0
-    results_query: results
-    url_query: url
-    title_query: title
-    content_query: summary
-    content_html_to_text: true
+    engine: searchzee
     categories: general
+    searchzee_categ: web
     shortcut: sz
     disabled: true
     inactive: true
-    about:
-      website: https://searchzee.com
-      use_official_api: false
-      require_api_key: false
-      results: JSON
 
   - name: searchzee news
-    engine: json_engine
-    search_url: https://searchzee.com/api/search?q={query}&type=news&offset={pageno}{time_range}
-    paging: true
-    first_page_num: 0
-    time_range_support: true
-    time_range_url: "&freshness={time_range_val}"
-    time_range_map:
-      day: pd
-      week: pw
-      month: pm
-      year: py
-    results_query: results
-    url_query: url
-    title_query: title
-    content_query: summary
-    thumbnail_query: thumbnail
-    content_html_to_text: true
+    engine: searchzee
     categories: news
+    searchzee_categ: news
     shortcut: sznw
     disabled: true
     inactive: true
@@ -3252,6 +3276,14 @@ engines:
   #   brave_category: goggles
   #   Goggles: # required! This should be a URL ending in .goggle
 
+  - name: exaapi
+    engine: exaapi
+    shortcut: exa
+    api_key: ""
+    search_type: auto
+    content_mode: highlights
+    inactive: true
+
   - name: lib.rs
     shortcut: lrs
     engine: lib_rs
@@ -3297,6 +3329,36 @@ engines:
     shortcut: std
     base_url: https://info.searchtoday.site
     disabled: true
+
+  - name: sina
+    engine: json_engine
+    shortcut: sina
+    categories: news
+    paging: true
+    first_page_num: 1
+    search_url: https://search.sina.com.cn/api/search?q={query}&tp=mix&sort=0&page={pageno}&size=10&from=search_result
+    results_query: data/list
+    url_query: url
+    title_query: title
+    content_query: intro
+    thumbnail_query: thumb
+    title_html_to_text: true
+    time_range_map:
+      day: d
+      week: w
+      month: m
+      year: y
+    time_range_support: true
+    time_range_url: "&from=advanced_search&time={time_range_val}"
+    disabled: true
+    inactive: true
+    language: zh
+    about:
+      website: https://search.sina.com.cn
+      wikidata_id: Q938668
+      use_official_api: false
+      require_api_key: false
+      results: JSON
 
   # - name: webcrawler
   #   engine: s1search

@@ -47,7 +47,7 @@ ENGINES_CACHE: ExpireCacheSQLite = ExpireCacheSQLite.build_cache(
     ExpireCacheCfg(
         name="ENGINES_CACHE",
         MAXHOLD_TIME=60 * 60 * 24 * 7,  # 7 days
-        MAINTENANCE_PERIOD=60 * 60,  # 2h
+        MAINTENANCE_PERIOD=60 * 60,  # 1h
         MAX_VALUE_LEN=1024 * 1024 * 1024,  # 1MB
     )
 )
@@ -207,6 +207,7 @@ class EngineAbout(msgspec.Struct, kw_only=True):
 
     use_official_api: bool = False
     """SearXNG engine makes use of the official API or not"""
+
     require_api_key: bool = False
     """API requires a key or not."""
 
@@ -217,8 +218,7 @@ class EngineAbout(msgspec.Struct, kw_only=True):
     """Brief description of the engine and where it gets its data from.
 
     This value should only be set as long as no description of the data source
-    is available via a :py:obj:`EngineAbout.wikidata_id`.
-    """
+    is available via a :py:obj:`EngineAbout.wikidata_id`."""
 
     language: str = ""
     """Deprecated! Migrate your setting from `engine.about.language` to
@@ -361,37 +361,43 @@ class Engine(abc.ABC):  # pylint: disable=too-few-public-methods
          https: socks5://proxy:port
     """
 
-    def setup(self, engine_settings: dict[str, t.Any]) -> bool:  # pylint: disable=unused-argument
+    def setup(self, engine_settings: dict[str, t.Any]) -> bool | None:  # pylint: disable=unused-argument
         """Dynamic setup of the engine settings.
 
         With this method, the engine's setup is carried out.  For example, to
         check or dynamically adapt the values handed over in the parameter
-        ``engine_settings``.  The return value (True/False) indicates whether
-        the setup was successful and the engine can be built or rejected.
+        ``engine_settings``.
 
-        The method is optional and is called synchronously as part of the
+        Whether the initialization was successful can be indicated by the return
+        value ``True`` or even ``False``.
+
+        - If no return value (``None`` ) is given from this method , this is
+          equivalent to ``True``.
+
+        - If an exception is thrown as part of the initialization, this is
+          equivalent to ``False``.
+
+        The method is optional and is called **synchronously** as part of the
         initialization of the service and is therefore only suitable for simple
-        (local) exams/changes at the engine setting.  The :py:obj:`Engine.init`
-        method must be used for longer tasks in which values of a remote must be
-        determined, for example.
+        (local) exams/changes at the engine setting.
+
+        The :py:obj:`Engine.init` method must be used for longer tasks in which
+        values of a remote must be determined, for example.
         """
         return True
 
     def init(self, engine_settings: dict[str, t.Any]) -> bool | None:  # pylint: disable=unused-argument
         """Initialization of the engine.
 
-        The method is optional and asynchronous (in a thread).  It is suitable,
-        for example, for setting up a cache (for the engine) or for querying
-        values (required by the engine) from a remote.
+        The method is optional and called **asynchronous** (in a thread).  The
+        method is comparable to :py:obj:`Engine.setup`, it is suitable, for
+        caching data that first needs to be requested from a remote.
 
-        Whether the initialization was successful can be indicated by the return
-        value ``True`` or even ``False``.
+        The method is optional and runs **asynchronously** (in a thread), it is
+        comparable to :py:obj:`Engine.setup`. For instance, it is suitable for
+        caching data that first needs to be requested from a remote source.
 
-        - If no return value is given from this init method (``None``), this is
-          equivalent to ``True``.
-
-        - If an exception is thrown as part of the initialization, this is
-          equivalent to ``False``.
+        The evaluation of the return value is analogous to :py:obj:`Engine.setup`.
         """
         return True
 

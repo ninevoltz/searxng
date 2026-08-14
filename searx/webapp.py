@@ -891,7 +891,7 @@ def info(pagename, locale):
     )
 
 
-@app.route('/autocompleter', methods=['GET', 'POST'])
+@app.route('/autocompleter', methods=['GET'])
 def autocompleter():
     """Return autocompleter results"""
 
@@ -933,10 +933,12 @@ def autocompleter():
         mimetype = 'application/json'
     else:
         # the suggestion request comes from browser's URL bar
-        suggestions = json.dumps([sug_prefix, results])
+        relevances = {
+            'google:suggestrelevance': [600 - i for i in range(len(results))]
+        }  # chromium only shows 3 suggestions unless we attach relevances
+        suggestions = json.dumps([sug_prefix, results, [], [], relevances])
         mimetype = 'application/x-suggestions+json'
 
-    suggestions = escape(suggestions, False)
     return Response(suggestions, mimetype=mimetype)
 
 
@@ -1281,7 +1283,7 @@ def opensearch():
         method = 'GET'
 
     if method not in ('POST', 'GET'):
-        method = 'POST'
+        method = 'GET'
 
     ret = render('opensearch.xml', opensearch_method=method, autocomplete=autocomplete)
     resp = Response(response=ret, status=200, mimetype="application/opensearchdescription+xml")
